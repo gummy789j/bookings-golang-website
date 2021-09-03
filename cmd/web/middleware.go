@@ -32,6 +32,8 @@ func Recoverer(next http.Handler) http.Handler {
 */
 
 // Micic Recover middleware 自己造一個middleware
+// 只要有ServeHTTP method 都屬於 Handler
+// type HandlerFunc func(http.ResposeWriter, *http.Request) 有 ServeHTTP method
 func WriteToConsole(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Hit the page")
