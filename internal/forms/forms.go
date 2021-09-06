@@ -1,9 +1,12 @@
 package forms
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
 )
 
 type Forms struct {
@@ -39,5 +42,23 @@ func (f *Forms) Required(fields ...string) {
 		if strings.TrimSpace(value) == "" {
 			f.Errors.Add(field, "This field cannot be blank")
 		}
+	}
+}
+
+func (f *Forms) MinLength(field string, length int, r *http.Request) bool {
+
+	x := r.Form.Get(field)
+
+	if len(x) < length {
+		f.Errors.Add(field, fmt.Sprintf("This field must be at least %d characters long", length))
+		return false
+	}
+
+	return true
+}
+
+func (f *Forms) IsEmail(field string) {
+	if !govalidator.IsEmail(f.Get(field)) {
+		f.Errors.Add(field, "Invalid email address")
 	}
 }
