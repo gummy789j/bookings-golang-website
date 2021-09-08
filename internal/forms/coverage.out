@@ -1,0 +1,18 @@
+mode: set
+github.com/gummy789j/bookings/internal/forms/errors.go:5.44,7.2 1 1
+github.com/gummy789j/bookings/internal/forms/errors.go:9.42,11.24 1 1
+github.com/gummy789j/bookings/internal/forms/errors.go:15.2,15.20 1 0
+github.com/gummy789j/bookings/internal/forms/errors.go:11.24,13.3 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:16.34,21.2 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:23.40,26.13 2 1
+github.com/gummy789j/bookings/internal/forms/forms.go:30.2,30.13 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:26.13,29.3 2 1
+github.com/gummy789j/bookings/internal/forms/forms.go:34.30,36.2 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:38.44,39.31 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:39.31,41.37 2 1
+github.com/gummy789j/bookings/internal/forms/forms.go:41.37,43.4 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:47.58,51.21 2 1
+github.com/gummy789j/bookings/internal/forms/forms.go:56.2,56.13 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:51.21,54.3 2 1
+github.com/gummy789j/bookings/internal/forms/forms.go:59.39,60.40 1 1
+github.com/gummy789j/bookings/internal/forms/forms.go:60.40,62.3 1 1

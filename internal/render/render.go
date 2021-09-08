@@ -2,6 +2,8 @@ package render
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,6 +17,7 @@ import (
 var functions = template.FuncMap{}
 
 var app *config.AppConfig
+var pathToTemplates = "./templates"
 
 func NewTemplates(a *config.AppConfig) {
 	app = a
@@ -28,20 +31,21 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 	return td
 }
 
-func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) {
+func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) error {
 
 	tc := make(map[string]*template.Template)
 
 	if app.UseCache {
-		tc, _ = CreateTemplateCache()
-	} else {
 		tc = app.TemplateCache
+	} else {
+		tc, _ = CreateTemplateCache()
 	}
 
 	t, ok := tc[tmpl]
 	//fmt.Println(tmpl)
 	if !ok {
-		log.Fatal("Could not get template from template cache")
+		//log.Fatal("Could not get template from template cache")
+		return errors.New("can't get template from cache")
 	}
 
 	//parsedTemplate, _ := template.ParseFiles("./templates/" + tmpl)
@@ -52,11 +56,18 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *mod
 
 	td = AddDefaultData(td, r)
 
-	_ = t.Execute(buf, td)
-	_, err := buf.WriteTo(w)
+	err := t.Execute(buf, td)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = buf.WriteTo(w)
 	if err != nil {
 		log.Println("error writing template to browser", err)
+		return err
 	}
+
+	return nil
 }
 
 // *template.Template是一個解析過後的html(...等)的file，也就是一些儲存text的fragment的在的記憶體位置
@@ -64,7 +75,7 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 
 	myCache := make(map[string]*template.Template)
 
-	pages, err := filepath.Glob("./templates/*.page.tmpl")
+	pages, err := filepath.Glob(fmt.Sprintf("%s/*.page.tmpl", pathToTemplates))
 	if err != nil {
 		return myCache, err
 	}
@@ -107,7 +118,7 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 		// 	}
 		// }
 
-		ts, err = ts.ParseGlob("./templates/*.layout.tmpl")
+		ts, err = ts.ParseGlob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
 		if err != nil {
 			return myCache, err
 		}
