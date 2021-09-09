@@ -8,6 +8,7 @@ import (
 
 	"github.com/gummy789j/bookings/internal/config"
 	"github.com/gummy789j/bookings/internal/forms"
+	"github.com/gummy789j/bookings/internal/helpers"
 	"github.com/gummy789j/bookings/internal/models"
 	"github.com/gummy789j/bookings/internal/render"
 )
@@ -79,7 +80,7 @@ func (this *Repository) JsonAvailability(w http.ResponseWriter, r *http.Request)
 	out, err := json.MarshalIndent(resp, "", "     ")
 
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 	}
 
 	log.Println(string(out))
@@ -105,7 +106,7 @@ func (this *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (this *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
@@ -160,7 +161,7 @@ func (this *Repository) ReservationSummary(w http.ResponseWriter, r *http.Reques
 	// it need to assert to models.Reservation type
 	reservation, ok := this.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		log.Println("Cannot get item from session")
+		this.App.ErrorLog.Println("Can't get error from session")
 		this.App.Session.Put(r.Context(), "error", "Can't get reservation from session")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
