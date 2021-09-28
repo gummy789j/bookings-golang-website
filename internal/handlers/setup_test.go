@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -27,7 +28,7 @@ var pathToTemplates = "../../templates"
 
 var functions = template.FuncMap{}
 
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 
 	gob.Register(models.Reservation{})
 
@@ -46,6 +47,11 @@ func getRoutes() http.Handler {
 
 	app.Session = session
 
+	app.MailChan = make(chan models.MailData)
+	defer close(app.MailChan)
+
+	ListenForMail()
+
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
@@ -54,10 +60,23 @@ func getRoutes() http.Handler {
 	app.TemplateCache = tc
 	app.UseCache = true
 
-	repo := NewRepo(&app)
+	repo := NewTestRepo(&app)
 	NewHandlers(repo)
 
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
+
+	os.Exit(m.Run())
+}
+
+func ListenForMail() {
+	go func() {
+		for {
+			_ = <-app.MailChan
+		}
+	}()
+}
+
+func getRoutes() http.Handler {
 
 	mux := chi.NewRouter()
 

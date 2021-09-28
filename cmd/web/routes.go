@@ -32,6 +32,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/reservation-summary", handlers.Repo.ReservationSummary)
 	mux.Get("/choose-room/{id}", handlers.Repo.ChooseRoom)
 	mux.Get("/book-room", handlers.Repo.BookRoom)
+	mux.Get("/user/login", handlers.Repo.ShowLogin)
 
 	// 只要有Open method的都屬於FileSystem interface
 	// type Dir string 就有Open method

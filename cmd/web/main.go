@@ -35,6 +35,17 @@ func main() {
 
 	defer db.SQL.Close()
 
+	defer close(app.MailChan)
+
+	ListenForMail()
+
+	// from := "me@here.com"
+	// auth := smtp.PlainAuth("", from, "", "localhost")
+	// err = smtp.SendMail("localhost:1025", auth, from, []string{"you@here.com"}, []byte("Hello, world"))
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
 	//http.HandleFunc("/", handlers.Repo.Home)
 
 	//http.HandleFunc("/about", handlers.Repo.About)
@@ -56,27 +67,40 @@ func run() (*driver.DB, error) {
 
 	// what am I going to put in the session
 	// use to initialize
+	// only be used on the initialization
 	gob.Register(models.User{})
 	gob.Register(models.Reservation{})
 	gob.Register(models.Restriction{})
 	gob.Register(models.Room{})
 	gob.Register(models.RoomRestriction{})
 
+	// Build a new mail channal
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
+
 	//  change this when in production
 	app.InProduction = false
 
+	// Build a new info logger for later
 	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+
+	// store the new info logger
 	app.InfoLog = infoLog
 
+	// Build a new error logger for later
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// store the new error logger
 	app.ErrorLog = errorLog
 
+	// Build a new Session manager and set some parameters
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.SameSite = http.SameSiteLaxMode
 	session.Cookie.Secure = app.InProduction
 
+	// store seesion manager
 	app.Session = session
 
 	// connect with database
@@ -88,20 +112,29 @@ func run() (*driver.DB, error) {
 
 	log.Println("Connected to database!")
 
+	// CreateTemplateCache to help the development faster (do not need to re-execute when modified templates)
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
 		return nil, err
 	}
 
+	// store template cache
 	app.TemplateCache = tc
+
+	// whether using template cache or not
 	app.UseCache = false
 
+	// Build a new repository which is when you get the request and call handler, it can store the data and function that you need
 	repo := handlers.NewRepo(&app, db)
+
+	// Build a new handlers
 	handlers.NewHandlers(repo)
 
+	// After your handler end you need to render the template on the browser
 	render.NewRenderer(&app)
 
+	// Helper can help you to handle the error message
 	helpers.NewHelpers(&app)
 
 	return db, nil
