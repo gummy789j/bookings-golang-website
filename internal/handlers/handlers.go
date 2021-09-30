@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -460,8 +461,79 @@ func (this *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ShowLogin
 func (this *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
+}
+
+//PostShowLogin handles logging the user in
+func (this *Repository) PostShowLogin(w http.ResponseWriter, r *http.Request) {
+
+	// 使user每次登入登出時，都會使用新的session id
+	// 避免 fixation attack
+	_ = this.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	email := r.PostForm.Get("email")
+	password := r.PostForm.Get("password")
+
+	form := forms.New(r.PostForm)
+
+	form.IsEmail("email")
+	form.Required("email", "password")
+	if !form.Valid() {
+		render.Template(w, r, "login.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+	id, _, err := this.DB.Authenticate(email, password)
+	if err != nil {
+		log.Println(err)
+		this.App.Session.Put(r.Context(), "error", "Invalid login credentials")
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+
+	this.App.Session.Put(r.Context(), "flash", "Logged in successfully")
+	this.App.Session.Put(r.Context(), "user_id", id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// Logout logs a user out
+func (this *Repository) Logout(w http.ResponseWriter, r *http.Request) {
+
+	_ = this.App.Session.Destroy(r.Context())
+	_ = this.App.Session.RenewToken(r.Context())
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (this *Repository) AdminDashBoard(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
+}
+
+func (this *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
+
+	render.Template(w, r, "admin-new-reservations.page.tmpl", &models.TemplateData{})
+
+}
+
+func (this *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
+
+	render.Template(w, r, "admin-all-reservations.page.tmpl", &models.TemplateData{})
+
+}
+
+func (this *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
+
+	render.Template(w, r, "admin-reservations-calendar.page.tmpl", &models.TemplateData{})
+
 }
