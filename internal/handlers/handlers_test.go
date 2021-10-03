@@ -10,8 +10,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	"github.com/gummy789j/bookings/internal/models"
 )
 
 type postData struct {
@@ -31,20 +29,14 @@ var theTests = []struct {
 	{"major-suite", "/majors-suite", "GET", http.StatusOK},
 	{"generals-quarters", "/generals-quarters", "GET", http.StatusOK},
 	{"contact", "/contact", "GET", http.StatusOK},
-	// {"search-availability(post)", "/search-availability", "POST", []postData{
-	// 	{key: "start", value: "2021-09-15"},
-	// 	{key: "end", value: "2021-09-18"},
-	// }, http.StatusOK},
-	// {"search-availability-json", "/search-availability-json", "POST", []postData{
-	// 	{key: "start", value: "2021-09-15"},
-	// 	{key: "end", value: "2021-09-18"},
-	// }, http.StatusOK},
-	// {"make-reservation(post)", "/make-reservation", "POST", []postData{
-	// 	{key: "first_name", value: "Steven"},
-	// 	{key: "last_name", value: "Lin"},
-	// 	{key: "email", value: "gummy789j@gmail.com"},
-	// 	{key: "phone", value: "0956520626"},
-	// }, http.StatusOK},
+
+	// new routes
+	{"login", "/user/login", "GET", http.StatusOK},
+	{"logout", "/user/logout", "GET", http.StatusOK},
+	{"dashboard", "/admin/dashboard", "GET", http.StatusOK},
+	{"new res", "/admin/reservations-new", "GET", http.StatusOK},
+	{"all res", "/admin/reservations-all", "GET", http.StatusOK},
+	{"show res", "/admin/reservations/new/1/show", "GET", http.StatusOK},
 }
 
 func TestHandlers(t *testing.T) {
@@ -66,43 +58,43 @@ func TestHandlers(t *testing.T) {
 	}
 }
 
-func TestRepository_Reservation(t *testing.T) {
-	reservation := models.Reservation{
-		RoomID: 1,
-		Room: models.Room{
-			ID:       1,
-			RoomName: "General's Quarters",
-		},
-	}
+// func TestRepository_Reservation(t *testing.T) {
+// 	reservation := models.Reservation{
+// 		RoomID: 1,
+// 		Room: models.Room{
+// 			ID:       1,
+// 			RoomName: "General's Quarters",
+// 		},
+// 	}
 
-	req, _ := http.NewRequest("GET", "/make-reservation", nil)
-	ctx := getCtx(req)
-	req = req.WithContext(ctx)
+// 	req, _ := http.NewRequest("GET", "/make-reservation", nil)
+// 	ctx := getCtx(req)
+// 	req = req.WithContext(ctx)
 
-	rr := httptest.NewRecorder()
+// 	rr := httptest.NewRecorder()
 
-	session.Put(ctx, "reservation", reservation)
+// 	session.Put(ctx, "reservation", reservation)
 
-	handler := http.HandlerFunc(Repo.Reservation)
+// 	handler := http.HandlerFunc(Repo.Reservation)
 
-	handler.ServeHTTP(rr, req)
+// 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("Reservation handler returned wrong response code: got %d, wanted %d", rr.Code, http.StatusOK)
-	}
+// 	if rr.Code != http.StatusOK {
+// 		t.Errorf("Reservation handler returned wrong response code: got %d, wanted %d", rr.Code, http.StatusOK)
+// 	}
 
-	// test case where reservation is not in session (reset everything)
-	req, _ = http.NewRequest("GET", "/make-reservation", nil)
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
+// 	// test case where reservation is not in session (reset everything)
+// 	req, _ = http.NewRequest("GET", "/make-reservation", nil)
+// 	ctx = getCtx(req)
+// 	req = req.WithContext(ctx)
 
-	rr = httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Reservation handler returned wrong response code: got %d, wanted %d", rr.Code, http.StatusOK)
-	}
+// 	rr = httptest.NewRecorder()
+// 	handler.ServeHTTP(rr, req)
+// 	if rr.Code != http.StatusTemporaryRedirect {
+// 		t.Errorf("Reservation handler returned wrong response code: got %d, wanted %d", rr.Code, http.StatusOK)
+// 	}
 
-}
+// }
 
 func TestRepository_PostReservation(t *testing.T) {
 
@@ -384,6 +376,33 @@ func TestRepository_JsonAvailbility(t *testing.T) {
 		t.Errorf("Search availability function should not work but work")
 	}
 
+}
+
+func TestRepository_BookRoom(t *testing.T) {
+	postedData := url.Values{}
+	postedData.Add("start_date", "2050-01-01")
+	postedData.Add("end_date", "2050-01-02")
+	postedData.Add("room_id", "1")
+
+	req, _ := http.NewRequest("POST", "/search-availability", strings.NewReader(postedData.Encode()))
+
+	ctx := getCtx(req)
+
+	req = req.WithContext(ctx)
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(Repo.JsonAvailability)
+
+	handler.ServeHTTP(rr, req)
+
+	var j jsonResponse
+	err := json.Unmarshal([]byte(rr.Body.String()), &j)
+	if err != nil {
+		t.Error("failed to parse json")
+	}
 }
 
 func getCtx(req *http.Request) context.Context {

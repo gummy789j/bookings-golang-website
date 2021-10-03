@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -65,21 +66,40 @@ func main() {
 
 func run() (*driver.DB, error) {
 
-	// what am I going to put in the session
-	// use to initialize
-	// only be used on the initialization
+	// Register records a type, identified by a value for that type, under its internal type name.
+	// That name will identify the concrete type of a value sent or received as an interface variable.
+	// Only types that will be transferred as implementations of interface values need to be registered.
+	// Expecting to be used only during initialization, it panics if the mapping between types and names is not a bijection.
+	// 需要先register不然無法被辨識為interface{}
 	gob.Register(models.User{})
 	gob.Register(models.Reservation{})
 	gob.Register(models.Restriction{})
 	gob.Register(models.Room{})
 	gob.Register(models.RoomRestriction{})
+	gob.Register(map[string]int{})
+
+	// read flags
+	inProduction := flag.Bool("production", true, "Application is in production")
+	useCache := flag.Bool("cache", true, "Use template cache")
+	dbHost := flag.String("dbhost", "localhost", "Database host")
+	dbName := flag.String("dbname", "", "Database name")
+	dbUser := flag.String("dbuser", "", "Database user")
+	dbPwd := flag.String("dbpwd", "", "Database password")
+	dbPort := flag.String("dbport", "5432", "Database port")
+	dbSSL := flag.String("dbssl", "disable", "Database ssl settings")
+
+	flag.Parse()
+	if *dbName == "" || *dbUser == "" {
+		fmt.Println("Missing required flags")
+		os.Exit(1)
+	}
 
 	// Build a new mail channal
 	mailChan := make(chan models.MailData)
 	app.MailChan = mailChan
 
 	//  change this when in production
-	app.InProduction = false
+	app.InProduction = *inProduction
 
 	// Build a new info logger for later
 	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -105,7 +125,8 @@ func run() (*driver.DB, error) {
 
 	// connect with database
 	log.Println("Connecting to database...")
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=gummy789j password=")
+	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s", *dbHost, *dbPort, *dbName, *dbUser, *dbPwd, *dbSSL)
+	db, err := driver.ConnectSQL(connectionString)
 	if err != nil {
 		log.Fatal("Cannot connect to database! Dying...")
 	}
@@ -123,7 +144,7 @@ func run() (*driver.DB, error) {
 	app.TemplateCache = tc
 
 	// whether using template cache or not
-	app.UseCache = false
+	app.UseCache = *useCache
 
 	// Build a new repository which is when you get the request and call handler, it can store the data and function that you need
 	repo := handlers.NewRepo(&app, db)

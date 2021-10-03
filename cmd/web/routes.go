@@ -36,6 +36,9 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/user/login", handlers.Repo.ShowLogin)
 	mux.Get("/user/logout", handlers.Repo.Logout)
 	mux.Post("/user/login", handlers.Repo.PostShowLogin)
+	mux.Get("/login", handlers.Repo.ShowLogin)
+	mux.Get("/logout", handlers.Repo.Logout)
+	mux.Post("/login", handlers.Repo.PostShowLogin)
 
 	// 只要有Open method的都屬於FileSystem interface
 	// type Dir string 就有Open method
@@ -44,11 +47,17 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	mux.Route("/admin", func(mux chi.Router) {
-		mux.Use(Auth)
+		//mux.Use(Auth)
 		mux.Get("/dashboard", handlers.Repo.AdminDashBoard)
 		mux.Get("/reservations-new", handlers.Repo.AdminNewReservations)
 		mux.Get("/reservations-all", handlers.Repo.AdminAllReservations)
 		mux.Get("/reservations-calendar", handlers.Repo.AdminReservationsCalendar)
+		mux.Post("/reservations-calendar", handlers.Repo.AdminPostReservationsCalendar)
+		mux.Get("/reservations/{src}/{id}/show", handlers.Repo.AdminShowReservation)
+		mux.Post("/reservations/{src}/{id}", handlers.Repo.AdminPostShowReservation)
+		mux.Get("/process-reservations/{src}/{id}/do", handlers.Repo.AdminProcessReservation)
+		mux.Get("/delete-reservations/{src}/{id}/do", handlers.Repo.AdminDeleteReservation)
+
 	})
 
 	return mux
