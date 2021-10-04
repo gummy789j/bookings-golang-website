@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"log"
+
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +16,7 @@ import (
 	"github.com/gummy789j/bookings/internal/driver"
 	"github.com/gummy789j/bookings/internal/forms"
 	"github.com/gummy789j/bookings/internal/helpers"
+
 	"github.com/gummy789j/bookings/internal/models"
 	"github.com/gummy789j/bookings/internal/render"
 	"github.com/gummy789j/bookings/internal/repository"
@@ -101,9 +104,9 @@ func (this *Repository) PostAvailability(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	for _, val := range rooms {
-		this.App.InfoLog.Println("Room", val.ID, val.RoomName)
-	}
+	// for _, val := range rooms {
+	// 	this.App.InfoLog.Println("Room", val.ID, val.RoomName)
+	// }
 
 	if len(rooms) == 0 {
 		this.App.Session.Put(r.Context(), "error", "No availability")
