@@ -23,25 +23,25 @@
 
 ### How to run this website on your own server
 
-* clone project
+1. clone project
 ```
 $ git clone https://github.com/gummy789j/bookings_golang_website
 
 ```
 
-* build
+2. build
 ```
 $ go build -o bookings cmd/web/*.go
 
 ```
 
-* migrate Postgresql (you have to add soda as your enviromental parameters)
+3. migrate Postgresql (you have to add soda as your enviromental parameters)
 ```
 $ soda migrate
 
 ```
 
-* run
+4. run
 ```
 $ ./run.sh
 
